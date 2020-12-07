@@ -9,7 +9,7 @@ import { PublicRoute } from './components/Routes';
 import MainLayout from './layouts/MainLayout'
 
 /* View Components */
-import { MainView } from './views';
+import { MainView, ListView } from './views';
 
 /* Main Component */
 const App = ( props )=>{
@@ -21,7 +21,7 @@ const App = ( props )=>{
           <PublicRoute
             exact
             path="/"
-            component={ MainView }
+            component={ ListView }
           />
           <Redirect from="*" to="/" />
         </Switch>

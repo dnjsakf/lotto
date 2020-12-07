@@ -76,7 +76,7 @@ class SQLiteConnector(BaseConnector):
   def __init__(self, db="example.db", **args):
     try:
       self.db = db
-      self.initDropTable()
+      # self.initDropTable()
       self.initCreateTable()
     
     except Exception as e:
@@ -84,8 +84,17 @@ class SQLiteConnector(BaseConnector):
 
   def getConnection(self):
     if self.conn is None:
-      return sqlite3.connect(self.db)
+      self.conn = sqlite3.connect(self.db)
     return self.conn
+
+  def close(self):
+    try:
+      if self.conn is not None:
+        self.conn.close()
+    except Exception as e:
+      traceback.print_exc()
+    finally:
+      self.conn = None
     
   @with_cursor
   def initDropTable(self, cursor: sqlite3.Cursor ):
@@ -95,7 +104,7 @@ class SQLiteConnector(BaseConnector):
   def initCreateTable(self, cursor: sqlite3.Cursor):
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS LOTTO_RSLT (
-      NO              INTEGER
+      NO              INTEGER   PRIMARY KEY
       , WIN_DATE      TEXT
       , WIN_CNT_1ST   INTEGER
       , WIN_AMT_1ST   INTEGER
@@ -119,7 +128,7 @@ class SQLiteConnector(BaseConnector):
     ''')
 
   @with_cursor
-  def initLoadData(self, cursor: sqlite3.Cursor, filename="lotto_1-940.xlsx"):
+  def initLoadData(self, cursor: sqlite3.Cursor, filename):
     xslx = pd.read_excel(filename)
     datas = np.array(xslx)
 
@@ -176,8 +185,18 @@ class SQLiteConnector(BaseConnector):
     print("Inserted: %d" % cursor.rowcount )
 
   @with_cursor
-  def getLast(self, cursor):
-      cursor.execute("SELECT * FROM LOTTO_RSLT")
-      print( cursor.fetchone() )
+  def getLast(self, cursor: sqlite3.Cursor):
+    cursor.execute("SELECT * FROM LOTTO_RSLT")
+    return cursor.fetchone()
+
+  @with_cursor
+  def getAll(self, cursor: sqlite3.Cursor):
+    cursor.execute("SELECT * FROM LOTTO_RSLT ORDER BY NO DESC")
+    return cursor.fetchall()
+
+  @with_cursor
+  def getCount(self, cursor: sqlite3.Cursor):
+    cursor.execute("SELECT COUNT(1) FROM LOTTO_RSLT")
+    return cursor.fetchone()
 
 

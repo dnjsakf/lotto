@@ -1,0 +1,23 @@
+{
+  "presets": [
+    ["@babel/preset-env",{ "modules": false }], 
+    ["@babel/preset-react",{ "modules": false }]
+  ],
+  "plugins": [
+    [ "module-resolver", {
+        "root": [ "./src" ],
+        "alias": {
+          "@src": "./src",
+          "@components": "./src/components",
+          "@hooks": "./src/hooks",
+          "@layouts": "./src/layouts",
+          "@public": "./src/public",
+          "@reducers": "./src/reducers",
+          "@views": "./src/views",
+          "@theme": "./src/theme"
+        }
+      }
+    ],
+    "react-hot-loader/babel"
+  ]
+}

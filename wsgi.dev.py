@@ -6,8 +6,8 @@ ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 app_option = {
   "static_url_path": "/static/",
-  "static_folder": os.path.join(ROOT_PATH, "src"),
-  "template_folder": os.path.join(ROOT_PATH, "src"),
+  "static_folder": os.path.join(ROOT_PATH, "src/dist"),
+  "template_folder": os.path.join(ROOT_PATH, "src/dist"),
 }
 
 app = create_app(option=app_option)

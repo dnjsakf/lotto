@@ -39,6 +39,7 @@ npm install --save ^
 	react react-dom react-router-dom ^
 	redux react-redux redux-actions redux-thunk redux-logger ^
 	@material-ui/core @material-ui/icons ^
+	styled-components ^
 	@babel/polyfill
     
 npm install --save-dev ^

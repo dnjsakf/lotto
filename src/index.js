@@ -20,7 +20,6 @@ import theme from "./theme";
 /* Main Component */
 import App from './App';
 
-
 /* Functions: Renderer */
 function render(Component){
   const root = document.getElementById("root");

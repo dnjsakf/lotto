@@ -9,9 +9,7 @@
         "alias": {
           "@src": "./src",
           "@components": "./src/components",
-          "@hooks": "./src/hooks",
           "@layouts": "./src/layouts",
-          "@public": "./src/public",
           "@reducers": "./src/reducers",
           "@views": "./src/views",
           "@theme": "./src/theme"

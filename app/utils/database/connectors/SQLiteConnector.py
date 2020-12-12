@@ -43,7 +43,7 @@ def with_cursor(f):
 
     try:
       cursor = conn.cursor()
-      res = f(*args, cursor, **kwargs)
+      res = f(_self, cursor, *args[1:], **kwargs)
       cursor.close()
       
       conn.commit()
@@ -72,12 +72,16 @@ class SQLiteConnector(BaseConnector):
 
   conn = None
   db = None
+
+  countForPage = 0
   
-  def __init__(self, db="example.db", **args):
+  def __init__(self, db="example.db", *args, **kwargs):
     try:
       self.db = db
       # self.initDropTable()
-      self.initCreateTable()
+      # self.initCreateTable()
+
+      self.countForPage = kwargs.get("countForPage", 10)
     
     except Exception as e:
       traceback.print_exc()
@@ -85,6 +89,7 @@ class SQLiteConnector(BaseConnector):
   def getConnection(self):
     if self.conn is None:
       self.conn = sqlite3.connect(self.db)
+      self.conn.row_factory = self.make_dicts
     return self.conn
 
   def close(self):
@@ -95,7 +100,12 @@ class SQLiteConnector(BaseConnector):
       traceback.print_exc()
     finally:
       self.conn = None
-    
+
+  @staticmethod
+  def make_dicts(cursor, row):
+    return dict((cursor.description[idx][0], value)
+      for idx, value in enumerate(row))
+                  
   @with_cursor
   def initDropTable(self, cursor: sqlite3.Cursor ):
     cursor.execute('DROP TABLE LOTTO_RSLT')
@@ -186,17 +196,42 @@ class SQLiteConnector(BaseConnector):
 
   @with_cursor
   def getLast(self, cursor: sqlite3.Cursor):
-    cursor.execute("SELECT * FROM LOTTO_RSLT")
+    cursor.execute('''
+    SELECT * 
+      FROM LOTTO_RSLT
+     WHERE 1=1
+    ''')
     return cursor.fetchone()
 
   @with_cursor
   def getAll(self, cursor: sqlite3.Cursor):
-    cursor.execute("SELECT * FROM LOTTO_RSLT ORDER BY NO DESC")
+    cursor.execute('''
+    SELECT * 
+      FROM LOTTO_RSLT
+     WHERE 1=1
+     ORDER BY NO DESC
+    ''')
+    return cursor.fetchall()
+
+  @with_cursor
+  def getPage(self, cursor: sqlite3.Cursor, page=1):
+    offset = ((page - 1) * self.countForPage)
+    cursor.execute('''
+    SELECT * 
+      FROM LOTTO_RSLT 
+     WHERE 1=1
+     ORDER BY NO DESC 
+     LIMIT %d
+     OFFSET %d
+    ''' % ( self.countForPage, offset ))
     return cursor.fetchall()
 
   @with_cursor
   def getCount(self, cursor: sqlite3.Cursor):
-    cursor.execute("SELECT COUNT(1) FROM LOTTO_RSLT")
+    cursor.execute('''
+    SELECT COUNT(1) AS TOTAL_COUNT
+     FROM LOTTO_RSLT
+    ''')
     return cursor.fetchone()
 
 

@@ -5,6 +5,9 @@ import PropTypes from 'prop-types';
 /* Styled */
 import styled from 'styled-components';
 
+/* Recharts */
+import { LineChart, Line, Tooltip, CartesianGrid, XAxis } from 'recharts';
+
 /* Custom Components */
 import List from '@components/List';
 
@@ -68,6 +71,22 @@ const ListView = ( props )=>{
   /* Redner */
   return (
     <Container>
+      <LineChart
+        width={ 800 }
+        height={ 400 }
+        data={ datas }
+        margin={{ top: 5, right: 40, left: 40, bottom: 5 }}
+      >
+        <XAxis dataKey="NO" />
+        <Tooltip />
+        <CartesianGrid stroke="#f5f5f5" />
+        <Line type="monotone" dataKey="NUM1" stroke="#ff7300" yAxisId={0} />
+        <Line type="monotone" dataKey="NUM2" stroke="#387908" yAxisId={1} />
+        <Line type="monotone" dataKey="NUM3" stroke="#387908" yAxisId={2} />
+        <Line type="monotone" dataKey="NUM4" stroke="#387908" yAxisId={3} />
+        <Line type="monotone" dataKey="NUM5" stroke="#387908" yAxisId={4} />
+        <Line type="monotone" dataKey="BONUS" stroke="#387908" yAxisId={5} />
+      </LineChart>
       <List
         items={ datas }
         cols={ initColumns }

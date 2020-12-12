@@ -78,10 +78,10 @@ class SQLiteConnector(BaseConnector):
   def __init__(self, db="example.db", *args, **kwargs):
     try:
       self.db = db
+      self.countForPage = kwargs.get("countForPage", 10)
+
       # self.initDropTable()
       # self.initCreateTable()
-
-      self.countForPage = kwargs.get("countForPage", 10)
     
     except Exception as e:
       traceback.print_exc()
@@ -105,7 +105,10 @@ class SQLiteConnector(BaseConnector):
   def make_dicts(cursor, row):
     return dict((cursor.description[idx][0], value)
       for idx, value in enumerate(row))
-                  
+
+  '''
+  Servicies
+  '''
   @with_cursor
   def initDropTable(self, cursor: sqlite3.Cursor ):
     cursor.execute('DROP TABLE LOTTO_RSLT')
@@ -141,10 +144,7 @@ class SQLiteConnector(BaseConnector):
   def initLoadData(self, cursor: sqlite3.Cursor, filename):
     xslx = pd.read_excel(filename)
     datas = np.array(xslx)
-
     iters = LottoDataFormat(datas)
-
-    print( iters.size )
 
     cursor.executemany('''
       INSERT INTO LOTTO_RSLT (
@@ -195,16 +195,18 @@ class SQLiteConnector(BaseConnector):
     print("Inserted: %d" % cursor.rowcount )
 
   @with_cursor
-  def getLast(self, cursor: sqlite3.Cursor):
+  def getLastLotto(self, cursor: sqlite3.Cursor):
     cursor.execute('''
     SELECT * 
       FROM LOTTO_RSLT
      WHERE 1=1
+     ORDER BY NO DESC
+     LIMIT 1
     ''')
     return cursor.fetchone()
 
   @with_cursor
-  def getAll(self, cursor: sqlite3.Cursor):
+  def getAllLotto(self, cursor: sqlite3.Cursor):
     cursor.execute('''
     SELECT * 
       FROM LOTTO_RSLT
@@ -214,8 +216,11 @@ class SQLiteConnector(BaseConnector):
     return cursor.fetchall()
 
   @with_cursor
-  def getPage(self, cursor: sqlite3.Cursor, page=1):
+  def getPageLotto(self, cursor: sqlite3.Cursor, page=1):
     offset = ((page - 1) * self.countForPage)
+    if offset < 0:
+      return []
+
     cursor.execute('''
     SELECT * 
       FROM LOTTO_RSLT 
@@ -227,11 +232,17 @@ class SQLiteConnector(BaseConnector):
     return cursor.fetchall()
 
   @with_cursor
-  def getCount(self, cursor: sqlite3.Cursor):
+  def getTotalLotto(self, cursor: sqlite3.Cursor):
     cursor.execute('''
     SELECT COUNT(1) AS TOTAL_COUNT
      FROM LOTTO_RSLT
     ''')
-    return cursor.fetchone()
+    return cursor.fetchone().get("TOTAL_COUNT")
+  
+  @with_cursor
+  def getNextPage(self, cursor: sqlite3.Cursor, page=1):
+    return self.getPageLotto(page+1)
 
-
+  @with_cursor
+  def getPrevPage(self, cursor: sqlite3.Cursor, page=1):
+    return self.getPageLotto(page-1)

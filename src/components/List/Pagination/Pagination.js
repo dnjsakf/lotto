@@ -5,6 +5,9 @@ import PropTypes from 'prop-types';
 /* Styled */
 import styled from 'styled-components';
 
+/* 3rd Party */
+import clsx from 'clsx';
+
 /* Styled Component */
 const Container = styled.div`
   /* @TODO Write Style */
@@ -26,13 +29,24 @@ const Pagination = ( props )=>{
     ...rest
   } = props;
 
-  const startPage = parseInt(((page-1)/ countForPage))+1;
-  const endPage = (startPage + countForPage) > total ? total : (startPage + countForPage);
+  const startPage = (parseInt(((page-1)/(countForPage)))*countForPage)+1;
+  const endPage = ((startPage-1) + countForPage) >= parseInt(total/countForPage) ? parseInt(total/countForPage) : ((startPage-1) + countForPage);
 
   /* Render */
   return (
     <Container>
-      <button disabled={ !hasPrevPage }>{ "<" }</button>
+    <button
+      onClick={ ( event )=>{ console.log( endPage+1 ); onClickPage(event, 1); } }
+      disabled={ page == 1 }
+    >
+      { "|<" }
+    </button>
+      <button 
+        onClick={ ( event )=>{ onClickPage(event, startPage-1); } }
+        disabled={ !hasPrevPage }
+      >
+        { "<" }
+      </button>
       {
         (()=>{
           const pages = [];
@@ -40,7 +54,12 @@ const Pagination = ( props )=>{
             pages.push(
               <PageButton
                 key={ num }
-                onClick={ ( event )=>{ onClickPage(event, num) } }
+                onClick={ ( event )=>{ onClickPage(event, num); } }
+                className={
+                  clsx({
+                    "active": page == num
+                  })
+                }
               >
                 { num }
               </PageButton>
@@ -49,7 +68,18 @@ const Pagination = ( props )=>{
           return pages;
         })()
       }
-      <button disabled={ !hasNextPage }>{ ">" }</button>
+      <button
+        onClick={ ( event )=>{ console.log( endPage+1 ); onClickPage(event, endPage+1); } }
+        disabled={ !hasNextPage }
+      >
+        { ">" }
+      </button>
+      <button
+        onClick={ ( event )=>{ console.log( endPage+1 ); onClickPage(event, parseInt(total/countForPage)); } }
+        disabled={ endPage == parseInt(total/countForPage) }
+      >
+        { ">|" }
+      </button>
     </Container>
   );
 }

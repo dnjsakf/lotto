@@ -37,21 +37,32 @@ const ListView = ( props )=>{
   } = props;
   
   /* State */
-  const [ page, setPage ] = useState(1);
-  const [ datas, setDatas ] = useState([]);
+  const [ datas, setDatas ] = useState( [] );
+  const [ page, setPage ] = useState( 1 );
+  const [ pagination, setPagination ] = useState({
+    page: 1,
+    total: 0,
+    countForPage: 10,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
 
   /* Handlers: Change Page. */
   const handleClickPage = useCallback(( event, movePage )=>{
-    setPage( movePage );
+    setPage(( movePage > 0 ? movePage : 1 ));
   }, []);
 
   /* Side Effects: Component did mounted. */
   useEffect(()=>{
     axios({
-      url: "http://localhost:3000/data/"+page
+      url: "http://localhost:3000/api/lotto/list/"+page
     }).then((result)=>{
       setDatas(result.data.datas);
-    })
+      setPagination({
+        ...pagination,
+        ...result.data.pagination
+      });
+    });
   }, [ page ]);
 
   /* Redner */
@@ -61,11 +72,7 @@ const ListView = ( props )=>{
         items={ datas }
         cols={ initColumns }
         pagination={{
-          page: page,
-          total: 10,
-          countForPage: 10,
-          hasNextPage: true,
-          hasPrevPage: true,
+          ...pagination,
           onClickPage: handleClickPage,
         }}
       />

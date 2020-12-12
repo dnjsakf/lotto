@@ -5,11 +5,26 @@ import React from 'react';
 import { BrowserRouter, Switch, Redirect } from 'react-router-dom';
 import { PublicRoute } from './components/Routes';
 
+/* Styled */
+import { createGlobalStyle } from 'styled-components'
+
 /* Layout */
 import MainLayout from './layouts/MainLayout'
 
 /* View Components */
 import { MainView, ListView } from './views';
+
+
+/* Global Styled */
+const GlobalStyle = createGlobalStyle`
+  * {
+    box-sizing: border-box;
+  }
+
+  .active {
+    color: red;
+  }
+`
 
 /* Main Component */
 const App = ( props )=>{
@@ -26,6 +41,7 @@ const App = ( props )=>{
           <Redirect from="*" to="/" />
         </Switch>
       </MainLayout>
+      <GlobalStyle />
     </BrowserRouter>
   );
 }

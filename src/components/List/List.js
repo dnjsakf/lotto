@@ -11,6 +11,8 @@ import Pagination from './Pagination';
 
 /* Styled Component */
 const Conatiner = styled.ul`
+  padding: 0;
+  margin: 0 auto;
   /* @TODO Write Style */
 `;
 const ListItemHeader = styled.li`

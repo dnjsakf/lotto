@@ -115,7 +115,7 @@ class SQLiteConnector(BaseConnector):
   
   @with_cursor
   def initCreateTable(self, cursor: sqlite3.Cursor):
-    cursor.execute('''
+    cursor.executescript('''
     CREATE TABLE IF NOT EXISTS LOTTO_RSLT (
       NO              INTEGER   PRIMARY KEY
       , WIN_DATE      TEXT
@@ -137,7 +137,19 @@ class SQLiteConnector(BaseConnector):
       , NUM6          INTEGER
       , BONUS         INTEGER
       , LOAD_DTTM     TEXT
-    )
+    );
+
+    CREATE TALBE IF NOT EXISTS LOTTO_ANAL (
+      ANAL_NUM  INTEGER,
+      ANAL_NO   INTEGER,
+      NUM1 INTEGER, NUM2 INTEGER, NUM3 INTEGER, NUM4 INTEGER, NUM5 INTEGER, NUM6 INTEGER, NUM7 INTEGER, NUM8 INTEGER, NUM9 INTEGER, NUM10 INTEGER,
+      NUM11 INTEGER, NUM12 INTEGER, NUM13 INTEGER, NUM14 INTEGER, NUM15 INTEGER, NUM16 INTEGER, NUM17 INTEGER, NUM18 INTEGER, NUM19 INTEGER, NUM20 INTEGER,
+      NUM21 INTEGER, NUM22 INTEGER, NUM23 INTEGER, NUM24 INTEGER, NUM25 INTEGER, NUM26 INTEGER, NUM27 INTEGER, NUM28 INTEGER, NUM29 INTEGER, NUM30 INTEGER,
+      NUM31 INTEGER, NUM32 INTEGER, NUM33 INTEGER, NUM34 INTEGER, NUM35 INTEGER, NUM36 INTEGER, NUM37 INTEGER, NUM38 INTEGER, NUM39 INTEGER, NUM40 INTEGER,
+      NUM41 INTEGER, NUM42 INTEGER, NUM43 INTEGER, NUM44 INTEGER, NUM45 INTEGER,
+      REG_DTTM  TEXT,
+      UPD_DTTM  TEXT
+    );
     ''')
 
   @with_cursor
@@ -145,7 +157,7 @@ class SQLiteConnector(BaseConnector):
     xslx = pd.read_excel(filename)
     datas = np.array(xslx)
     iters = LottoDataFormat(datas)
-
+    
     cursor.executemany('''
       INSERT INTO LOTTO_RSLT (
         NO
@@ -246,3 +258,8 @@ class SQLiteConnector(BaseConnector):
   @with_cursor
   def getPrevPage(self, cursor: sqlite3.Cursor, page=1):
     return self.getPageLotto(page-1)
+
+  @with_cursor
+  def analLotto(self, cursor: sqlite3.Cursor):
+    datas = self.getAllLotto()
+    return None

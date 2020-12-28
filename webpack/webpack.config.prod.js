@@ -18,22 +18,22 @@ module.exports = merge(config, {
       root: config.output.path,
       verbose: true,
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.posix.join(
-            path.join(__dirname, "../src/public").replace(/\\/g, "/"),
-            "**/*"
-          ),
-          globOptions: {
-            ignore: [
-              "**/*.dat",
-              "**/subdir/**",
-            ],
-          },
-        },
-      ],
-    }),
+    // new CopyWebpackPlugin({
+    //   patterns: [
+    //     {
+    //       from: path.posix.join(
+    //         path.join(__dirname, "../src/public").replace(/\\/g, "/"),
+    //         "**/*"
+    //       ),
+    //       globOptions: {
+    //         ignore: [
+    //           "**/*.dat",
+    //           "**/subdir/**",
+    //         ],
+    //       },
+    //     },
+    //   ],
+    // }),
   ],
   optimization: {
     minimize: true,

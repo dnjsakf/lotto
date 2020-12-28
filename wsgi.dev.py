@@ -4,13 +4,7 @@ from app import create_app
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
-app_option = {
-  "static_url_path": "/static/",
-  "static_folder": os.path.join(ROOT_PATH, "src/dist"),
-  "template_folder": os.path.join(ROOT_PATH, "src/dist"),
-}
-
-app = create_app(option=app_option)
+app = create_app(ROOT_PATH=ROOT_PATH)
 
 if __name__ == '__main__':
   dotenv.load_dotenv(dotenv_path=".dev.env")

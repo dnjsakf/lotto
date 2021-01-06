@@ -1,9 +1,17 @@
+import logging
 import traceback
 import sqlite3
 
+class SQLiteConnection(sqlite3.Connection):
+  def cursor(self):
+    return SQLiteCursor(self)
+
+class SQLiteCursor(sqlite3.Cursor):
+  pass
+
 class SQLiteConnector(object):
 
-  conn = None
+  conn:SQLiteConnection = None
   db = "example.db"
 
   @classmethod
@@ -16,7 +24,7 @@ class SQLiteConnector(object):
       self.db = db
     self.conn = self.getConnection()
 
-  def getConnection(self):
+  def getConnection(self) -> sqlite3.Connection:
     if self.conn is None:
       try:
         self.conn = sqlite3.connect(self.db)
@@ -42,5 +50,4 @@ class SQLiteConnector(object):
     
   @staticmethod
   def make_dicts(cursor, row):
-    return dict((cursor.description[idx][0], value)
-      for idx, value in enumerate(row))
+    return dict((cursor.description[idx][0], value) for idx, value in enumerate(row))

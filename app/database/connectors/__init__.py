@@ -1,5 +1,19 @@
-from .SQLiteConnector import SQLiteConnector
+from .oracle import (
+    OracleConnector,
+    OracleConnection,
+    OracleCursor
+)
+from .sqlite import (
+    SQLiteConnector,
+    SQLiteConnection,
+    SQLiteCursor
+)
 
 __all__ = [
-    "SQLiteConnector"
+    "OracleConnector",
+    "OracleConnection",
+    "OracleCursor",
+    "SQLiteConnecto",
+    "SQLiteConnection",
+    "SQLiteCursor"
 ]

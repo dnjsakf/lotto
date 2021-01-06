@@ -1,54 +1,28 @@
-import requests
+import urllib
 import json
+  
+def request(url, params=None):
 
-class BaseModel(object):
-  def __init__(self, **kwargs):
-    pass
+  headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
+  }
 
-  def loads(self, data=None):
-    assert data is not None, "Data is None"
-    for attrName in dir(self):
-      attr = getattr(self, attrName)
-      if not callable(attr) and not attrName.startswith("__"):
-        if attrName in data:
-          setattr(self, attrName, data.get(attrName, None))
+  data = None
+  if params is not None:
+    data = urllib.parse.urlencode(params)
+    data = data.encode('utf-8')
 
-  def __str__(self):
-    attrs = list()
-    for attrName in dir(self):
-      attr = getattr(self, attrName)
-      if not callable(attr) and not attrName.startswith("__"):
-        attrs.append(( attrName, attr ))
-    return str(attrs)
+  reqt = urllib.request.Request(url, data, headers)
+  resp = urllib.request.urlopen(reqt)
 
-class IF_LOTTO_PRZWIN_MST(BaseModel):
-  DRWT_NO = None
-  DRWT_NO_DATE = None
-  DRWT_NO1 = None
-  DRWT_NO_DATE = None
-  DRWT_NO1 = None
-  DRWT_NO2 = None
-  DRWT_NO3 = None
-  DRWT_NO4 = None
-  DRWT_NO5 = None
-  DRWT_NO6 = None
-  DRWT_NO_BNUS = None
-  FRST_ACCUM_AMOUNT = None
-  FRST_PRZWIN_AMOUNT = None
-  FRST_PRZWIN_CO = None
-  RTN_VAL = None
-  REG_USER = None
-  REG_DTTM = None
-  UPD_USER = None
-  UPD_DTTM = None
+  if resp.status == 200:
+    return json.loads(resp.read())
 
-# req = requests.get("https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=903")
-# if req.status_code == 200:
-  # data = json.loads( req.text )
+  return None
 
-model = IF_LOTTO_PRZWIN_MST()
-model.loads(data={
-  "DRWT_NO": 1
+resp = request("https://www.dhlottery.co.kr/common.do", params={
+  "method": "getLottoNumber",
+  "drwNo": nextDrwtNo
 })
 
-print( model )
+model.loads( resp )

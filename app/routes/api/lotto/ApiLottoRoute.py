@@ -1,7 +1,5 @@
 from flask import Blueprint, jsonify
 
-from app.database.servicies import LottoService
-
 bp = Blueprint('api_lotto', __name__, url_prefix="/api/lotto")
 
 @bp.route("/list", methods=["GET"])

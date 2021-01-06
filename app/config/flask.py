@@ -1,16 +1,18 @@
-import os
-ROOT_PATH = 
+from .database import (
+  SQLiteConfig,
+  OracleConfig
+)
 
-class Config(object):
+class BaseConfig(object):
   DEBUG = False
   TESTING = False
   DATABASE_URI = 'sqlite://../app/database/example.db' # 'sqlite:///:memory:'
 
-class ProductionConfig(Config):
+class ProductionConfig(BaseConfig):
   DATABASE_URI = 'mysql://user@localhost/foo'
 
-class DevelopmentConfig(Config):
+class DevelopmentConfig(BaseConfig):
   DEBUG = True
 
-class TestingConfig(Config):
+class TestingConfig(BaseConfig):
   TESTING = True

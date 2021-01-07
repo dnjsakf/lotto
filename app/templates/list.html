@@ -1,4 +1,5 @@
-<!-- Jinja2 Templates -->
+{% extends "index.html" %}
+{% block content %}
 <style>
   .list-pagination { font-size: 0px; }
   .list-pagination .page-btn { font-size: 12px; opacity: 80%; background-color: transparent; border-style: solid; padding: 5px 8px; }
@@ -7,7 +8,7 @@
 </style>
 <script>
   function movePage(page){
-    location.href = "/"+page
+    location.href = "/list"+page
   }
 </script>
 <div class="list-container">
@@ -34,4 +35,4 @@
   {{ pageInfo.start_page }}
   {{ pageInfo.end_page }}
 </div>
-<!-- Jinja2 Templates -->
+{% endblock %}

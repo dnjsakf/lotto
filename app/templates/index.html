@@ -7,12 +7,22 @@
   <title>Document</title>
 </head>
 <body>
-  Hello, Flask!!!
-  {{ formatdatetime }}
-  <ul>
-    {% for data in datas %}
-    <li>{{ data.drwNo }}</li>
-    {% endfor %}
-  </ul>
+  <div id="root">
+    <header>
+      <h3>Hello, Flask!!!</h3>
+    </header>
+    <nav>
+      
+    </nav>
+    <section>
+      <h3>콘텐츠 블럭</h3>
+      <content id="content" style="display: block; border: 1px solid;">
+        {% block content %}{% endblock %}
+      </content>
+    </section>
+    <footer>
+
+    </footer>
+  </div>
 </body>
 </html>

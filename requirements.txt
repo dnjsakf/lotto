@@ -9,6 +9,7 @@ cx-Oracle==8.1.0
 et-xmlfile==1.0.1
 Flask==1.1.2
 Flask-Cors==3.0.9
+Flask-Script==2.0.6
 importlib-metadata==3.3.0
 iniconfig==1.1.1
 itsdangerous==1.1.0

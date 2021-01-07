@@ -62,9 +62,10 @@ class OracleConnector(object):
     cls.options = options
 
   def __init__(self, db=None, *args, **kwargs):
-    if db is not None:
-      self.db = db
-    self.conn = self.getConnection()
+    # if db is not None:
+    #   self.db = db
+    # self.conn = self.getConnection()
+    pass
 
   def getConnection(self, record_to_dict=True) -> OracleConnection:
     logger.info("[getConnection] start")

@@ -7,6 +7,7 @@ from .oracle import (
   OracleModel,
   ScottEmpModel,
   LottoApiModel,
+  LottoApiListModel,
   LottoApiDataModel
 )
 from .sqlite import (
@@ -19,5 +20,6 @@ __all__ = [
   "OracleModel",
   "ScottEmpModel",
   "LottoApiModel",
+  "LottoApiListModel",
   "LottoApiDataModel"
 ]

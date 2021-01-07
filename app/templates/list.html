@@ -1,0 +1,37 @@
+<!-- Jinja2 Templates -->
+<style>
+  .list-pagination { font-size: 0px; }
+  .list-pagination .page-btn { font-size: 12px; opacity: 80%; background-color: transparent; border-style: solid; padding: 5px 8px; }
+  .list-pagination .page-btn.active { color: red; opacity: 100%;  }
+  .list-pagination .page-btn:not([disabled]):hover { cursor: pointer;  opacity: 100%; background-color: lightgray; }
+</style>
+<script>
+  function movePage(page){
+    location.href = "/"+page
+  }
+</script>
+<div class="list-container">
+  <div class="list-header">
+
+  </div>
+  <div class="list-section">
+    <ul class="list">
+      {% for data in datas %}
+      <li class="list-item">{{ data.drwNo }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="list-pagination">
+    <button class="page-btn start-page" {{ "" if pageInfo.page > pageInfo.first_page else "disabled" }}>|<</button>
+    <button class="page-btn prev-page" {{ "" if pageInfo.has_prev_page else "disabled" }}><</button>
+    {% for page in range( pageInfo.start_page, pageInfo.end_page+1 ) %}
+      <button class="page-btn{{ ' active' if page == pageInfo.page }}" {{ "" if page <= pageInfo.last_page else "disabled" }} onclick="movePage('{{ page }}')">{{ page }}</button>
+    {% endfor %}
+    <button class="page-btn next-page" {{ "" if pageInfo.has_next_page else "disabled" }}>></button>
+    <button class="page-btn end-page" {{ "" if pageInfo.page < pageInfo.last_page else "disabled" }}>>|</button>
+  </div>
+  {{ pageInfo.page }}
+  {{ pageInfo.start_page }}
+  {{ pageInfo.end_page }}
+</div>
+<!-- Jinja2 Templates -->

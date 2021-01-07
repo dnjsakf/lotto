@@ -1,7 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
 from datetime import datetime, timedelta
 
-from app.database.connectors import SQLiteConnector
 from app.scheduler.jobs import LottoCrawlerJob
 
 bp = Blueprint("api/sched", __name__, url_prefix="/api/sched")
@@ -86,7 +85,7 @@ def apiSchedJobAdd(jobsotre=None):
   job_id = data.get("job_id", None)
 
   # TODO: Dynamical allocate
-  job = LottoCrawlJob(
+  job = LottoCrawlerJob(
     name=job_id,
     scheduled_type="date",
     run_date=datetime.now()+timedelta(seconds=10)

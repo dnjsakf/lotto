@@ -1,6 +1,6 @@
 import traceback
 
-from typing import Optional, Union, Iterable, Tuple, Any
+from typing import Optional, Union, Iterable, Tuple, List, Any
 from app.utils.fields.Fields import BaseField, ListField, DatetimeField
 
 class BaseModel(object):
@@ -413,17 +413,24 @@ class DatabaseModel(BaseModel):
 
     return None
 
-
+  # for list model
   def getDatas(self, conditions:Tuple[str, Any]=tuple()):
     '''
       DQL
         - 데이터 목록 조회
     '''
     colNames, symbols, values, PKs = self.getPstmt(fillter__ignore=False)
+    sel_values = list()
+    sorting:List(Tuple(str, str)) = list()
+
+    from_num = (self.Meta.page_info.get("rows_per_page") * ( self.Meta.page_info.get("page") - 1 )) + 1
+    to_num = self.Meta.page_info.get("rows_per_page") * self.Meta.page_info.get("page")
+
+    # Paging
+    SQL = "WITH SOURCE_OBJ AS ("
 
     # Set SQL
-    SQL = "SELECT "+ ",".join(colNames)+" FROM "+self.getTableName()
-    sel_values = list()
+    SQL += " SELECT %s, ROWNUM AS RN FROM %s " % ( ",".join(colNames), self.getTableName() )
 
     # Set Conditions
     SQL += " WHERE 1=1"
@@ -432,8 +439,19 @@ class DatabaseModel(BaseModel):
         SQL += ( " AND " + colName + " = " + symbol )
         sel_values.append( value )
 
+      if PK:
+        sorting.append((colName, "DESC"))
+
+    SQL += " AND ROWNUM <= %d " % ( to_num )
+
+    # Set Sorting
+    if len(sorting) > 0:
+      SQL += " ORDER BY "+",".join([ colname+" "+sorttype for colname, sorttype in sorting ])
+
+    SQL += " ) "
+    SQL += " SELECT %s FROM SOURCE_OBJ WHERE RN >= %d AND RN <= %d " % ( ",".join(colNames), from_num, to_num )
+
     # Execute DML
     res = self.executeQuery(SQL, sel_values)
 
     return res
-    

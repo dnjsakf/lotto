@@ -1,0 +1,109 @@
+{% extends "index.html" %}
+{% block section %}
+<div class="container">
+  <div class="card-panel">
+    <form id="form_job" method="POST" action="/lotto/write">
+      <div class="row">
+        <div class="input-field col s4">
+          <i class="material-icons prefix">account_circle</i>
+          <select name="job_type" class="validate">
+            <option value="" disabled selected>Choose Job Type</option>
+            {% for option in crawler_options %}
+              <option value="{{ option.jobId }}">{{ option.jobName }}</option>
+            {% endfor %}
+          </select>
+          <label>Job Type</label>
+        </div>
+        <div class="input-field col s8">
+          <i class="material-icons prefix">account_circle</i>
+          <input type="text" id="job_name" class="validate text-counter autocomplete" name="job_name" data-length="10">
+          <label for="job_name">Job Name</label>
+          <span class="helper-text" data-error="wrong" data-success="right">10 words</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="input-field col s12">
+          <div class="row">
+            <div class="input-field col s2">
+              <label>
+                <input type="radio" class="with-gap" name="scheuld_type" value="date" checked/>
+                <span>Date</span>
+              </label>
+            </div>
+            <div class="input-field col s2">
+              <label>
+                <input type="radio" class="with-gap" name="scheuld_type" value="interval"/>
+                <span>Interval</span>
+              </label>
+            </div>
+            <div class="input-field col s2">
+              <label>
+                <input type="radio" class="with-gap" name="scheuld_type" value="cron"/>
+                <span>Green</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="input-field col s6">
+          <i class="material-icons prefix">date_range</i>
+          <input type="text" id="schedule_date" class="datepicker" name="schedule_date">
+        </div>
+        <div class="input-field col s6">
+          <i class="material-icons prefix">watch_later</i>
+          <input type="text" id="schedule_time" class="timepicker" name="schedule_time">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="input-field col s12 center">
+          <button id="btn_clear_form" class="btn waves-effect waves-light">Clear</button>
+          <button type="submit" id="btn_submit_form" class="btn waves-effect waves-light">Submit
+            <i class="material-icons right">send</i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock section %}
+{% block post_load_js %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    $("#btn_clear_form").on("click", function(event){
+      event.preventDefault();
+      
+    });
+
+    $("#btn_submit_form").on("click", function(event){
+      event.preventDefault();
+
+      const formData = $("#form_job").getFormData();
+      
+      $.ajax({
+        method: "POST",
+        url: "/lotto/write",
+        data: formData,
+        success: function(resp){
+          console.log("success");
+          console.log( resp );
+        },
+        complete: function(resp){
+          console.log("complete");
+          console.log( resp );
+          M.toast({
+            html: resp.statusText,
+            classes: "left"
+          });
+        },
+      });
+    });
+
+    var instance = M.Timepicker.getInstance(document.getElementById("schedule_time"));
+
+  });
+</script>
+{% endblock post_load_js %}

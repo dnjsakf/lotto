@@ -3,6 +3,7 @@ from datetime import datetime
 
 from app.database.connectors import SQLiteConnector,  OracleConnector
 from app.models.sqlite import LottoAPIModel
+from app.models.oracle import LottoJobListModel
 
 SQLiteConnector.init(db="./app/database/example.db")
 OracleConnector.init(db="CAMPDB", username="SYSTEM", password="campmaxquad12")
@@ -19,16 +20,16 @@ OracleConnector.init(db="CAMPDB", username="SYSTEM", password="campmaxquad12")
 # #   print( record )
 # conn.rollback()
 
-from app.utils.fields import StringField, IntegerField, ListField, DatetimeField
+# from app.utils.fields import StringField, IntegerField, ListField, DatetimeField
 
-from app.models.oracle import ScottEmpModel, LottoApiModel, LottoApiDataModel
+# from app.models.oracle import ScottEmpModel, LottoApiModel, LottoApiDataModel
 
-lottoApi = LottoApiModel()
-lottoApi.loads(lottoApi.getDatas())
+# lottoApi = LottoApiModel()
+# lottoApi.loads(lottoApi.getDatas())
 
-lottoApiData = LottoApiDataModel()
-print( lottoApi.dumps() )
-print( lottoApiData.dump() )
+# lottoApiData = LottoApiDataModel()
+# print( lottoApi.dumps() )
+# print( lottoApiData.dump() )
 
 # model = ScottEmpModel(empNo=1000, hiredate=datetime.now())
 # pprint( model.dump() )
@@ -42,10 +43,10 @@ print( lottoApiData.dump() )
 # model = ListModel()
 # pprint( model.dumps() )
 
-from app.scheduler.launchers import JobLauncher
-from app.scheduler.jobs import LottoCrawlJob
+# from app.scheduler.launchers import JobLauncher
+# from app.scheduler.jobs import LottoCrawlJob
 
-job = LottoCrawlJob()
+# job = LottoCrawlJob()
 # job.execute()
 
 # testLauncher = JobLauncher(background=False)
@@ -56,3 +57,14 @@ job = LottoCrawlJob()
 # )
 # testLauncher.addJob(lottoCrawlJob, args=["1", "2"], kwargs={"test": 10})
 # testLauncher.start()
+
+
+model = LottoJobListModel([
+  {"jobId": "DumpCrawler1", "jobName": "DumpCrawler", "regUser": "admin", "regDttm": "20210101120000" },
+  {"jobId": "DumpCrawler2", "jobName": "DumpCrawler", "regUser": "admin", "regDttm": "20210101120000" },
+  {"jobId": "DumpCrawler3", "jobName": "DumpCrawler", "regUser": "admin", "regDttm": "20210101120000" },
+  {"jobId": "DumpCrawler4", "jobName": "DumpCrawler", "regUser": "admin", "regDttm": "20210101120000" }
+])
+print( model.dumps() )
+
+model.insertMany()

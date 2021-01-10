@@ -22,11 +22,34 @@ class BaseModel(object):
     else:
       self.load(dict(kwargs))
 
+  def getAttrs(self):
+    attrs = list()
+    for attrName in dir(self):
+      attr = getattr(self, attrName)
+      if not callable(attr) and not attrName.startswith("_"):
+        if isinstance(attr, BaseField):
+          attrs.append((attrName, attr.getOption("alias", None)))
+        else:
+          attrs.append((attrName, None))
+    return attrs
+
+  def getAlias(self):
+    return [ alias or attr for attr, alias in self.getAttrs() ]
+
   def loads(self, datas:list):
+    attrNames = self.getAttrs()
+
+    temp = list()
+    for data in datas:
+      temp_dict = dict()
+      for attrName, alias in attrNames:
+        temp_dict[attrName] = data.get(alias) or data.get(attrName)
+      temp.append(temp_dict)
+
     setattr(self, "__seek", 0)
     setattr(self, "__start", 0)
-    setattr(self, "__end", len(datas)-1)
-    setattr(self, "__datas", datas)
+    setattr(self, "__end", len(temp)-1)
+    setattr(self, "__datas", temp)
 
     return self
 
@@ -36,13 +59,12 @@ class BaseModel(object):
     '''
     load_data = dict()
     
-    for attrName in dir(self):
-      attr = getattr(self, attrName)
-      if attrName.startswith("_") or callable(attr):
-        continue
+    for attrName, alias in self.getAttrs():
       
+      attr = getattr(self, attrName)
+
       if isinstance(attr, BaseField):
-        dataKey = attr.getOption("alias", attrName)
+        dataKey = alias or attrName
 
         # Default Value
         default_value = None
@@ -52,7 +74,7 @@ class BaseModel(object):
           call_default_value = getattr(self, call_default_value)
 
         if callable(call_default_value):
-          default_value = call_default_value(dataKey, attr)
+          default_value = call_default_value(attrName, attr)
 
         # Set Value
         if isinstance(attr, ListField):
@@ -69,17 +91,18 @@ class BaseModel(object):
                 attrValue = retval
 
         else:
-          attrValue = data.get(dataKey, data.get(attrName, default_value))
+          attrValue = data.get(alias) or data.get(attrName)
 
         # Store value on field.
-        attr.setValue(attrValue)
+        attr.setValue(attrValue or default_value)
 
       else:
         '''
           BaseField가 아닌 경우, Attribute에 값을 직접 대입
         '''
         dataKey = attrName
-        attrValue = data.get(dataKey, None)
+        default_value = None
+        attrValue = data.get(dataKey, default_value)
         setattr(self, attrName, attrValue)
 
     # print( load_data )
@@ -117,23 +140,10 @@ class BaseModel(object):
 
     return dump_data
 
-  def dumps(self):
+  def dumps(self, datas=None):
     if hasattr(self, "__datas"):
       return [ self.dump(data) for data in getattr(self, "__datas") ]
     return None
-
-  def getAttrs(self):
-    attrs = list()
-    for attrName in dir(self):
-      attr = getattr(self, attrName)
-      if not callable(attr) and not attrName.startswith("_"):
-        attrValue = attr.getValue() if isinstance(attr, BaseField) else attr
-        attrs.append((
-          attrName,       # Attribute Name
-          attrValue,      # Attribute Value
-          type(attrValue) # Attribute Type
-        ))
-    return attrs
 
   def __iter__(self):
     return self
@@ -202,13 +212,16 @@ class DatabaseModel(BaseModel):
     values = list()
     PKs = list()
 
-    for name, value, _type in attrs:
-      if name.startswith("_"):
+    for attrName, alias in attrs:
+      if attrName.startswith("_"):
         continue
 
-      attr = getattr(self, name)
+      attr = getattr(self, attrName)
+      value = None
 
       if isinstance(attr, BaseField):
+        value = attr.getValue()
+
         ignore = bool(attr.getOption("ignore"))
         if "fillter__ignore" in kwargs and kwargs.get("fillter__ignore", False) != ignore:
           continue
@@ -218,11 +231,14 @@ class DatabaseModel(BaseModel):
           continue
         PKs.append(PK)
 
-      colNames.append(name)
+      else:
+        value = attr
+
+      colNames.append(attrName)
       values.append(value)
 
       if self.Meta.symbol == ":":
-        symbols.append(self.Meta.symbol+name)
+        symbols.append(self.Meta.symbol+attrName)
       else:
         symbols.append(self.Meta.symbol)
 
@@ -349,6 +365,9 @@ class DatabaseModel(BaseModel):
       else:
         selected = cursor.fetchall()
 
+      if hasattr(self.Meta, "description"):
+        setattr(self.Meta, "description", cursor.description)
+
       cursor.close()
 
     except Exception as e:
@@ -372,6 +391,33 @@ class DatabaseModel(BaseModel):
       conn = self.Meta.db.getConnection()
       cursor = conn.cursor()
       cursor.execute(SQL, values)
+      cursor.close()
+
+      updatecount = cursor.rowcount
+
+      conn.commit()
+
+    except Exception as e:
+      traceback.print_exc()
+      conn.rollback()
+
+    finally:
+      self.Meta.db.close()
+      
+    return updatecount
+    
+  def executeMany(self, SQL, values=None):
+    '''
+      DML(Data Manipulation Language) Bulk
+        - insert, delete, update
+    '''
+    updatecount = 0
+
+    conn = None
+    try:
+      conn = self.Meta.db.getConnection()
+      cursor = conn.cursor()
+      cursor.executemany(SQL, values)
       cursor.close()
 
       updatecount = cursor.rowcount
@@ -413,45 +459,181 @@ class DatabaseModel(BaseModel):
 
     return None
 
-  # for list model
-  def getDatas(self, conditions:Tuple[str, Any]=tuple()):
+
+  def insertMany(self):
+    '''
+      DML
+        - 데이터 입력
+    '''
+    colNames, symbols, values, PKs = self.getPstmt(fillter__ignore=False)
+
+    # values = list()
+    # symbols = [ ":"+str(idx) for idx in range(1, len(colNames)+1) ]
+
+    if hasattr(self, "__datas"):
+      values = getattr(self, "__datas")
+
+    # Set SQL
+    SQL = "INSERT INTO "+self.getTableName()+" ("
+    SQL += ", ".join(colNames)
+    SQL += ") VALUES ("
+    SQL += ", ".join(symbols)
+    SQL += ")"
+
+    print( SQL )
+    print( symbols )
+    print( values )
+
+    # Execute DML
+    return self.executeMany(SQL, values)
+
+
+  # For list model
+  def getDatas(self,
+    filters:Tuple[dict]=dict(), # <COLUMN NAME>__<OPERATION> = VALUE
+    sortings:Iterable[str]=list(), # # <COLUMN NAME>__<ORDER TYPE>
+    dump=True
+    ):
     '''
       DQL
         - 데이터 목록 조회
     '''
-    colNames, symbols, values, PKs = self.getPstmt(fillter__ignore=False)
-    sel_values = list()
+    column_names, symbols, values, PKs = self.getPstmt(fillter__ignore=False)
+
+    conditions:List(str) = list()
     sorting:List(Tuple(str, str)) = list()
+    sel_values = list()
 
     from_num = (self.Meta.page_info.get("rows_per_page") * ( self.Meta.page_info.get("page") - 1 )) + 1
     to_num = self.Meta.page_info.get("rows_per_page") * self.Meta.page_info.get("page")
 
-    # Paging
-    SQL = "WITH SOURCE_OBJ AS ("
-
-    # Set SQL
-    SQL += " SELECT %s, ROWNUM AS RN FROM %s " % ( ",".join(colNames), self.getTableName() )
-
     # Set Conditions
-    SQL += " WHERE 1=1"
-    for idx, ( colName, symbol, value, PK ) in enumerate(zip(colNames, symbols, values, PKs)):
-      if colName in conditions:
-        SQL += ( " AND " + colName + " = " + symbol )
-        sel_values.append( value )
+    if filters is not None:
+      for filter_name, filter_value in filters.items():
+        colname = filter_name.split("__")[0]
+        operator = " = "
 
-      if PK:
-        sorting.append((colName, "DESC"))
+        if filter_name.endswith("__EQ"):
+          operator = " = "
+        elif filter_name.endswith("__LT"):
+          operator = " < "
+        elif filter_name.endswith("__OT"):
+          operator = " > "
 
-    SQL += " AND ROWNUM <= %d " % ( to_num )
+        conditions.append("AND " + colname + operator + self.Meta.symbol+colname)
+        sel_values.append(filter_value)
 
     # Set Sorting
-    if len(sorting) > 0:
-      SQL += " ORDER BY "+",".join([ colname+" "+sorttype for colname, sorttype in sorting ])
+    if sortings is not None:
+      for sorting_name in sortings:
+        colname = sorting_name.split("__")[0]
+        operator = " ASC "
 
-    SQL += " ) "
-    SQL += " SELECT %s FROM SOURCE_OBJ WHERE RN >= %d AND RN <= %d " % ( ",".join(colNames), from_num, to_num )
+        if sorting_name.endswith("__DESC"):
+          operator = "DESC"
+        
+        sorting.append(colname+" "+operator)
+
+    # Main SQL
+    SOURCE_SQL = '''
+        SELECT {columns}
+          FROM {table}
+         WHERE 1=1
+           {conditions}
+    '''.format(
+      columns=",".join(column_names),
+      table=self.getTableName(),
+      conditions=" ".join(conditions)
+    )
+    if len(sorting) > 0:
+      SOURCE_SQL += '''
+         ORDER BY {sorting}
+      '''.format(sorting=",".join( sort for sort in sorting ))
+
+    # Page Info SQL
+    if hasattr(self.Meta, "page_info"):
+      TOTAL_SQL = '''
+      WITH TOTAL_OBJ AS (
+        {source}
+      )
+      SELECT COUNT(1) AS TOTAL_COUNT
+        FROM TOTAL_OBJ
+      '''.format(
+        source=SOURCE_SQL
+      )
+      res = self.executeQuery(TOTAL_SQL, sel_values, fetchone=True)
+
+      self.setPageInfo(
+        total_count=res.get("TOTAL_COUNT")
+      )
+
+    if len(sorting) == 0:
+      sorting.append(column_names[0]+" ASC")
+
+    # Page Data SQL
+    PAING_SQL = '''
+      WITH SOURCE_OBJ AS (
+        {source}
+      ), SORT_OBJ AS (
+        SELECT T1.*
+             , ROW_NUMBER() OVER( ORDER BY {sorting} ) AS RN
+          FROM SOURCE_OBJ T1
+         WHERE 1=1
+      )
+      SELECT {columns}
+        FROM SORT_OBJ
+       WHERE 1=1
+         AND RN >= {from_num}
+         AND RN <= {to_num}
+    '''.format(
+      source=SOURCE_SQL,
+      sorting=",".join(sorting),
+      columns=",".join(column_names),
+      from_num=from_num,
+      to_num=to_num
+    )
 
     # Execute DML
-    res = self.executeQuery(SQL, sel_values)
+    res = self.executeQuery(PAING_SQL, sel_values)
 
-    return res
+    if dump:
+      return self.loads(res).dumps()
+    else:
+      return res
+  
+  # For List Model
+  def setPagination(self, source, **kwargs):
+    pass
+
+  # For list model
+  def setPageInfo(self, *args, **kwargs):
+    page = kwargs.get("page") or self.Meta.page_info.get("page") or self.Meta.page_info.get("first_page", 1)
+
+    rows_per_page = kwargs.get("rows_per_page") or self.Meta.page_info.get("rows_per_page", 10)
+    count_per_page = kwargs.get("count_per_page") or self.Meta.page_info.get("count_per_page", 10)
+    
+    total_count = kwargs.get("total_count") or self.Meta.page_info.get("total_count") or 0
+    first_page = self.Meta.page_info.get("first_page")
+    last_page = int(total_count / rows_per_page) + ( 1 if total_count % rows_per_page > 0 else 0 )
+
+    start_page = int( page / count_per_page ) if int( page / count_per_page ) > 0 else first_page
+    end_page = start_page + count_per_page - 1
+    
+    page = ( ( page if page < last_page else last_page ) if page > first_page else first_page )
+    next_page = ( page + 1 ) if page < last_page else last_page
+    prev_page = ( page - 1 ) if page > first_page else 1
+
+    self.Meta.page_info.update(
+      page=page,
+      rows_per_page=rows_per_page,
+      count_per_page=count_per_page,
+      first_page=first_page,
+      last_page=last_page,
+      start_page=start_page,
+      end_page=end_page,
+      next_page=next_page,
+      prev_page=prev_page,
+      total_count=total_count,
+      has_next_page=page < last_page,
+      has_prev_page=page > first_page
+    )

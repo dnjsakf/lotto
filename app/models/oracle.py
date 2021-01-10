@@ -13,7 +13,8 @@ __all__ = [
   "ScottEmpModel",
   "LottoApiModel",
   "LottoApiListModel",
-  "LottoApiDataModel"
+  "LottoApiDataModel",
+  "LottoJobListModel"
 ]
 
 class OracleModel(DatabaseModel):
@@ -67,10 +68,12 @@ class LottoApiListModel(OracleModel):
     schema = "LOTTO"
     table = "IF_LOTTO_PRZWIN_MST"
     page_info = dict(
+      page=1,
       first_page=1,
       rows_per_page=10,
       count_per_page=10
     )
+    description = dict()
 
   DRWT_NO             = IntegerField(alias="drwNo", PK=True, min=1)
   DRWT_NO_DATE        = DatetimeField(alias="drwNoDate", format="%Y-%m-%d")
@@ -89,54 +92,27 @@ class LottoApiListModel(OracleModel):
   REG_DTTM            = StringField(alias="regDttm", maxlength=14, default_value="getNotDttm")
   UPD_USER            = StringField(alias="updUser", default_value="getUserName")
   UPD_DTTM            = StringField(alias="updDttm", maxlength=14, default_value="getNotDttm")
+  
 
-  # Customs
-  TOTAL_COUNT         = IntegerField(alias="totalCount", default_value="getTotalCount", ignore=True)
-
-  def getTotalCount(self, colname=None, info=None):
-    retval = self.executeQuery('''
-      SELECT COUNT(1) AS TOTAL_COUNT
-        FROM LOTTO.IF_LOTTO_PRZWIN_MST T1
-        WHERE 1=1
-    ''', fetchone=True, record_to_dict=True)
-
-    total_count = int(retval.get("TOTAL_COUNT"))
-
-    self.setPageInfo(total_count=total_count)
-
-    return total_count
-
-  def setPageInfo(self, *args, **kwargs):
-    page = kwargs.get("page") or self.Meta.page_info.get("page") or self.Meta.page_info.get("first_page", 1)
-
-    rows_per_page = kwargs.get("rows_per_page") or self.Meta.page_info.get("rows_per_page", 10)
-    count_per_page = kwargs.get("count_per_page") or self.Meta.page_info.get("count_per_page", 10)
-    
-    total_count = kwargs.get("total_count") or self.Meta.page_info.get("total_count") or 0
-    first_page = self.Meta.page_info.get("first_page")
-    last_page = int(total_count / rows_per_page) + ( 1 if total_count % rows_per_page > 0 else 0 )
-
-    start_page = int( page / count_per_page ) if int( page / count_per_page ) > 0 else first_page
-    end_page = start_page + count_per_page - 1
-    
-    page = ( ( page if page < last_page else last_page ) if page > first_page else first_page )
-    next_page = ( page + 1 ) if page < last_page else last_page
-    prev_page = ( page - 1 ) if page > first_page else 1
-
-    self.Meta.page_info.update(
-      page=page,
-      rows_per_page=rows_per_page,
-      count_per_page=count_per_page,
-      first_page=first_page,
-      last_page=last_page,
-      start_page=start_page,
-      end_page=end_page,
-      next_page=next_page,
-      prev_page=prev_page,
-      total_count=total_count,
-      has_next_page=page < last_page,
-      has_prev_page=page > first_page
+class LottoJobListModel(OracleModel):
+  class Meta:
+    schema = "LOTTO"
+    table = "MT_JOB_MST"
+    page_info = dict(
+      page=1,
+      first_page=1,
+      rows_per_page=10,
+      count_per_page=10
     )
+    description = dict()
+
+  JOB_ID              = IntegerField(alias="jobId", PK=True)
+  JOB_NAME            = StringField(alias="jobName")
+  REG_USER            = StringField(alias="regUser", default_value=lambda colname, info:"admin")
+  REG_DTTM            = StringField(alias="regDttm", maxlength=14, default_value="getNotDttm")
+  UPD_USER            = StringField(alias="updUser", default_value="getUserName")
+  UPD_DTTM            = StringField(alias="updDttm", maxlength=14, default_value="getNotDttm")
+
 
 class LottoApiDataModel(OracleModel):
   

@@ -1,30 +1,38 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="{{ url_for('static', filename='plugins/materialize/css/materialize.css' ) }}">
-  <script src="{{ url_for('static', filename='plugins/materialize/js/materialize.js' ) }}"></script>
-  <title>Document</title>
-</head>
-<body>
-  <div id="root">
-    <header>
-      <h3>Hello, Flask!!!</h3>
-    </header>
-    <nav>
-
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Parallax Template - Materialize</title>
+    <!-- CSS  -->
+    {% include "./common/style.jinja" %}
+    {% block style %}{% endblock style %}
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    {% include "./common/pre-load-js.jinja" %}
+    {% block pre_load_js %}{% endblock pre_load_js %}
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="white" role="navigation">
+      {% block navigation %}
+        {% include "./layout/main/navigation.html" %}
+      {% endblock navigation %}
     </nav>
+    <!-- Section -->
     <section>
-      <h3>콘텐츠 블럭</h3>
-      <content id="content" style="display: block; border: 1px solid;">
-        {% block content %}{% endblock %}
-      </content>
+        {% block section %}
+          {% include "./layout/main/section.html" %}
+        {% endblock section %}
     </section>
-    <footer>
-
+    <!-- Footer -->
+    <footer class="page-footer teal">
+      {% block footer %}
+        {% include "./layout/main/footer.html" %}
+      {% endblock footer %}
     </footer>
-  </div>
-</body>
+    <!-- Scripts -->
+    {% include "./common/post-load-js.jinja" %}
+    {% block post_load_js %}{% endblock post_load_js %}
+  </body>
 </html>

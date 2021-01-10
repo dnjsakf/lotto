@@ -11,7 +11,7 @@ class ProductionConfig(BaseConfig):
   SQLITE_URI = 'mysql://user@localhost/foo'
 
 class DevelopmentConfig(BaseConfig):
-  DEV_SERVER_HOST = "localhost"
+  DEV_SERVER_HOST = "0.0.0.0"
   DEV_SERVER_PORT = 3000
   DEV_SERVER_THREADED = True
   

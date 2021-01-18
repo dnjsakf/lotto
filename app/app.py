@@ -40,7 +40,7 @@ def create_app():
   app.config["SECRET_KEY"] = SECRET_KEY
 
   # Set Configuration for Scheduler
-  app.config["launcher"] = JobLauncher(**SCHEDULER_CONFIG)
+  app.config["scheduler"] = JobLauncher(**SCHEDULER_CONFIG)
 
   # Set Initialize for Database
   SQLiteConnector.init(**SQLITE_DATABASE_CONFIG)

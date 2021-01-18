@@ -8,33 +8,33 @@ bp = Blueprint("api/sched", __name__, url_prefix="/api/sched")
 @bp.route("/")
 @bp.route("/<path:cmd>")
 def apiSchedCmd(cmd=None, job_id=None):
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
 
   if cmd == "start":
-    launcher.start()
+    scheduler.start()
 
   elif cmd == "stop":
-    launcher.stop()
+    scheduler.stop()
 
   elif cmd == "resume":
-    launcher.resume()
+    scheduler.resume()
 
   elif cmd == "pause":
-    launcher.pause()
+    scheduler.pause()
 
   return jsonify({
-    "state": launcher.sched.state,
-    "list": [ job.id for job in launcher.getJobs() ]
+    "state": scheduler.sched.state,
+    "list": [ job.id for job in scheduler.getJobs() ]
   }), 200
 
 
 @bp.route("/job/list", methods=["GET"])
 def apiSchedJobList():
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
   
   return jsonify({
-    "state": launcher.sched.state,
-    "list": [ added_job.id for job in launcher.getJobs() ]
+    "state": scheduler.sched.state,
+    "list": [ added_job.id for job in scheduler.getJobs() ]
   }), 200
 
 
@@ -42,20 +42,20 @@ def apiSchedJobList():
 @bp.route("/job/state/<path:job_id>")
 @bp.route("/job/state/<path:jobstore>/<path:job_id>")
 def apiSchedJobState(job_id=None, jobstore=None):
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
   
-  state = launcher.getJobState(jobstore=jobstore, job_id=job_id)
+  state = scheduler.getJobState(jobstore=jobstore, job_id=job_id)
   print( state )
 
   return jsonify({
-    "state": launcher.sched.state,
+    "state": scheduler.sched.state,
     "list": state
   }), 200
 
 
 @bp.route("/job/add", methods=["GET"])
 def apiSchedJobAddView():
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
 
   return '''
   <form action="/api/sched/job/add" method="POST">
@@ -70,7 +70,7 @@ def apiSchedJobAddView():
 @bp.route("/job/add", methods=["POST"])
 @bp.route("/job/add/<path:jobsotre>", methods=["POST"])
 def apiSchedJobAdd(jobsotre=None):
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
   
   method = request.method
   data = None
@@ -91,26 +91,26 @@ def apiSchedJobAdd(jobsotre=None):
     run_date=datetime.now()+timedelta(seconds=10)
   )
   
-  added_job = launcher.addJob(job, args=["1", "2"], kwargs=data)
+  added_job = scheduler.addJob(job, args=["1", "2"], kwargs=data)
 
   return jsonify({
-    "state": launcher.sched.state,
-    "list": [ added_job.id for job in launcher.getJobs() ]
+    "state": scheduler.sched.state,
+    "list": [ added_job.id for job in scheduler.getJobs() ]
   }), 200
 
 
 @bp.route("/job/remove")
 @bp.route("/job/remove/<path:job_id>")
 def apiSchedJobRemove(job_id=None):
-  launcher = current_app.config["launcher"]
+  scheduler = current_app.config["scheduler"]
   
   if job_id is not None:
     if job_id == "all":
-      launcher.removeAllJob()
+      scheduler.removeAllJob()
     else:
-      launcher.removeJob(job_id)
+      scheduler.removeJob(job_id)
 
   return jsonify({
-    "state": launcher.sched.state,
-    "list": [ job.id for job in launcher.getJobs() ]
+    "state": scheduler.sched.state,
+    "list": [ job.id for job in scheduler.getJobs() ]
   }), 200

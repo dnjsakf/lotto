@@ -1,0 +1,109 @@
+{% extends "index.html" %}
+{% block section %}
+<div class="container">
+  <div class="card-panel">
+    <div class="col s12">
+      <form id="form_job" method="POST" action="/sched/write">
+        <div class="row">
+          <div class="input-field col s12">
+            <select name="jobId" class="validate">
+              <option value="" disabled selected>Choose Job</option>
+              {% for option in job_options %}
+                <option value="{{ option.jobId }}">{{ option.jobName }}</option>
+              {% endfor %}
+            </select>
+            <label>Job</label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col s12">
+            <ul class="tabs">
+              <li class="tab col s4"><a href="#date_type" class="active">Date</a></li>
+              <li class="tab col s4"><a href="#interval_type">Interval</a></li>
+              <li class="tab col s4"><a href="#cron_type">Crontab</a></li>
+            </ul>
+          </div>
+          <div id="date_type" class="col s12 schedule-type-tab" data-type="date">
+            <div class="row">
+              <div class="input-field col s6">
+                <input type="date" id="run_date" name="runDate" data-format="yyyy-MM-dd">
+              </div>
+              <div class="input-field col s6">
+                <input type="time" id="run_time" name="runTime" data-format="HH:mm:ss">
+              </div>
+            </div>
+          </div>
+          <div id="interval_type" class="col s12 schedule-type-tab" data-type="interval">
+            <div class="input-field col s4">
+              <input type="number" id="hours" name="hours" class="validate">
+              <label for="hours">Hours</label>
+            </div>
+            <div class="input-field col s4">
+              <input type="number" id="minutes" name="minutes" class="validate">
+              <label for="minutes">Minutes</label>
+            </div>
+            <div class="input-field col s4">
+              <input type="number" id="seconds" name="seconds" class="validate">
+              <label for="seconds">Seconds</label>
+            </div>
+          </div>
+          <div id="cron_type" class="col s12 schedule-type-tab" data-type="cron">
+            <div class="input-field col s12">
+              <input type="text" id="cron" name="cron" class="validate">
+              <label for="cron">Crontab</label>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="input-field col s12 center">
+            <button id="btn_clear_form" class="btn waves-effect waves-light">Clear</button>
+            <button type="submit" id="btn_submit_form" class="btn waves-effect waves-light">Submit
+              <i class="material-icons right">send</i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock section %}
+{% block post_load_js %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    $("#btn_clear_form").on("click", function(event){
+      event.preventDefault();
+    });
+
+    $("#btn_submit_form").on("click", function(event){
+      event.preventDefault();
+
+      const $form = $("#form_job");
+      const formData = $form.getFormData();
+      const method = $form.attr("method");
+      const action = $form.attr("action");
+      const type = $(".schedule-type-tab.active").attr("data-type");
+
+      formData.schType = type;
+
+      $.ajax({
+        method: method,
+        url: action,
+        data: formData,
+        success: function(resp){
+          console.log("success");
+          console.log( resp );
+        },
+        complete: function(resp){
+          console.log("complete");
+          console.log( resp );
+          M.toast({
+            html: resp.statusText,
+            classes: "left"
+          });
+        },
+      });
+    });
+  });
+</script>
+{% endblock post_load_js %}

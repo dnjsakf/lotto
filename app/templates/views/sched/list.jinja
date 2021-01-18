@@ -1,0 +1,51 @@
+{% extends "index.html" %}
+{% block section %}
+<script>
+  function movePage(page){
+    location.href = "/sched/list/"+page
+  }
+
+  (function($){
+    const pageinfo = {{ pageInfo|tojson }}
+    const datas = {{ datas|tojson }}
+
+    console.log( datas );
+  })(jQuery);
+
+</script>
+<div class="container">
+  <div>
+    <a href="/sched/write">Create</a>
+  </div>
+  <table id="sched_list">
+    <thead>
+      <tr>
+        <th>추천회차</th>
+        <th>추천일</th>
+        <th>번호1</th>
+        <th>번호2</th>
+        <th>번호3</th>
+        <th>번호4</th>
+        <th>번호5</th>
+        <th>번호6</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for data in datas %}
+      <tr>
+        <td>{{ data.drwNo }}</td>
+        <td>{{ data.drwNoDate }}</td>
+        <td>{{ data.drwtNo1 }}</td>
+        <td>{{ data.drwtNo2 }}</td>
+        <td>{{ data.drwtNo3 }}</td>
+        <td>{{ data.drwtNo4 }}</td>
+        <td>{{ data.drwtNo5 }}</td>
+        <td>{{ data.drwtNo6 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% include "/modules/pagination.jinja" %}
+</div>
+
+{% endblock section %}

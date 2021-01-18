@@ -11,23 +11,23 @@ class OracleConfig:
   init_res = [
     '''
       CREATE TABLE LOTTO.IF_LOTTO_PRZWIN_MST (
-        DRWT_NO	            NUMBER,
-        DRWT_NO_DATE		    VARCHAR2(8),
-        DRWT_NO1            NUMBER,
-        DRWT_NO2            NUMBER,
-        DRWT_NO3            NUMBER,
-        DRWT_NO4            NUMBER,
-        DRWT_NO5            NUMBER,
-        DRWT_NO6            NUMBER,
-        DRWT_NO_BNUS        NUMBER,
-        FRST_ACCUM_AMOUNT	  NUMBER,
-        FRST_PRZWIN_AMOUNT  NUMBER,
-        FRST_PRZWIN_CO      NUMBER,
-        RTN_VAL             VARCHAR2(500),
-        REG_USER            VARCHAR2(50),
-        REG_DTTM            VARCHAR2(14),
-        UPD_USER            VARCHAR2(50),
-        UPD_DTTM            VARCHAR2(14)
+          DRWT_NO	            NUMBER,
+          DRWT_NO_DATE		    VARCHAR2(8),
+          DRWT_NO1            NUMBER,
+          DRWT_NO2            NUMBER,
+          DRWT_NO3            NUMBER,
+          DRWT_NO4            NUMBER,
+          DRWT_NO5            NUMBER,
+          DRWT_NO6            NUMBER,
+          DRWT_NO_BNUS        NUMBER,
+          FRST_ACCUM_AMOUNT	  NUMBER,
+          FRST_PRZWIN_AMOUNT  NUMBER,
+          FRST_PRZWIN_CO      NUMBER,
+          RTN_VAL             VARCHAR2(500),
+          REG_USER            VARCHAR2(50),
+          REG_DTTM            VARCHAR2(14),
+          UPD_USER            VARCHAR2(50),
+          UPD_DTTM            VARCHAR2(14)
       )
       TABLESPACE TS_QUADMAX_DAT
       ;
@@ -35,6 +35,8 @@ class OracleConfig:
       ALTER TABLE LOTTO.IF_LOTTO_PRZWIN_MST
           ADD CONSTRAINT PK_IF_LOTTO_PRZWIN_MST
           PRIMARY KEY ( DRWT_NO )
+          USING INDEX
+          TABLESPACE TS_QUADMAX_IDX
       ;
 
       COMMENT ON TABLE LOTTO.IF_LOTTO_PRZWIN_MST IS 'IF_로또_추첨결과_마스터';
@@ -59,33 +61,138 @@ class OracleConfig:
       GRANT SELECT ON LOTTO.IF_LOTTO_PRZWIN_MST TO PUBLIC;
     ''',
     '''
-      CREATE TABLE LOTTO.MT_JOB_MST (
-          JOB_ID          VARCHAR2(50)        NOT NULL,
-          JOB_NAME        VARCHAR2(50)        NOT NULL,
-          REG_USER        VARCHAR2(50),
-          REG_DTTM        VARCHAR2(14),
-          UPD_USER        VARCHAR2(50),
-          UPD_DTTM        VARCHAR2(14)
-      )
-      TABLESPACE TS_QUADMAX_DAT
-      ;
+        CREATE TABLE LOTTO.MT_JOB_MST (
+            JOB_ID          VARCHAR2(50)        NOT NULL,
+            JOB_NAME        VARCHAR2(50)        NOT NULL,
+            REG_USER        VARCHAR2(50),
+            REG_DTTM        VARCHAR2(14),
+            UPD_USER        VARCHAR2(50),
+            UPD_DTTM        VARCHAR2(14)
+        )
+        TABLESPACE TS_QUADMAX_DAT
+        ;
 
-      COMMENT ON TABLE LOTTO.MT_JOB_MST IS '메타_JOB_마스터';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.JOB_ID IS 'JOB_ID';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.JOB_NAME IS 'JOB_명';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.REG_USER IS '생성자';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.REG_DTTM IS '생성일';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.UPD_USER IS '수정자';
-      COMMENT ON COLUMN LOTTO.MT_JOB_MST.UPD_DTTM IS '수정일';
+        COMMENT ON TABLE LOTTO.MT_JOB_MST IS '메타_JOB_마스터';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.JOB_ID IS 'JOB_ID';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.JOB_NAME IS 'JOB_명';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.REG_USER IS '생성자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.REG_DTTM IS '생성일';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.UPD_USER IS '수정자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_MST.UPD_DTTM IS '수정일';
 
-      ALTER TABLE LOTTO.MT_JOB_MST
-          ADD CONSTRAINT PK_MT_JOB_MST
-          PRIMARY KEY ( JOB_ID )
+        ALTER TABLE LOTTO.MT_JOB_MST
+            ADD CONSTRAINT PK_MT_JOB_MST
+            PRIMARY KEY ( JOB_ID )
+            USING INDEX
+            TABLESPACE TS_QUADMAX_IDX
+        ;
+
+        GRANT SELECT ON LOTTO.MT_JOB_MST TO PUBLIC;
+      ''',
+      '''
+        CREATE TABLE LOTTO.MT_JOB_SCHE_MST (
+            SCH_ID          VARCHAR2(50)        NOT NULL,
+            JOB_ID          VARCHAR2(50)        NOT NULL,
+            SCH_TYPE        VARCHAR2(10)        NOT NULL,
+            RUN_FLAG        VARCHAR2(1)         DEFAULT 'N'     NOT NULL,
+            LAST_RUN_DATE   VARCHAR2(8),
+            LAST_RUN_TIME   VARCHAR2(8),
+            REG_USER        VARCHAR2(50),
+            REG_DTTM        VARCHAR2(14),
+            UPD_USER        VARCHAR2(50),
+            UPD_DTTM        VARCHAR2(14)
+        )
+        TABLESPACE TS_QUADMAX_DAT
+        ;
+
+        COMMENT ON TABLE LOTTO.MT_JOB_SCHE_MST IS '메타_JOB_스케줄_마스터';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.SCH_ID IS '스케줄_ID';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.JOB_ID IS 'JOB_ID';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.SCH_TYPE IS '스케줄_타입';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.RUN_FLAG IS '수행_여부';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.REG_USER IS '생성자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.REG_DTTM IS '생성일';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.UPD_USER IS '수정자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_MST.UPD_DTTM IS '수정일';
+
+        ALTER TABLE LOTTO.MT_JOB_SCHE_MST
+            ADD CONSTRAINT PK_MT_JOB_SCHE_MST
+            PRIMARY KEY ( SCH_ID, JOB_ID )
+            USING INDEX
+            TABLESPACE TS_QUADMAX_IDX
+        ;
+
+        GRANT SELECT ON LOTTO.MT_JOB_SCHE_MST TO PUBLIC;
+      ''',
+      '''
+        CREATE TABLE LOTTO.MT_JOB_SCHE_DATE_MST (
+            SCH_ID          VARCHAR2(50)        NOT NULL,
+            JOB_ID          VARCHAR2(50)        NOT NULL,
+            RUN_DATE        VARCHAR2(14),
+            RUN_FLAG        VARCHAR2(1)         DEFAULT 'Y'     NOT NULL,
+            REG_USER        VARCHAR2(50),
+            REG_DTTM        VARCHAR2(14),
+            UPD_USER        VARCHAR2(50),
+            UPD_DTTM        VARCHAR2(14)
+        )
+        TABLESPACE TS_QUADMAX_DAT
+        ;
+
+        COMMENT ON TABLE LOTTO.MT_JOB_SCHE_DATE_MST IS '메타_JOB_스케줄_지정일_마스터';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.SCH_ID IS '스케줄_ID';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.JOB_ID IS 'JOB_ID';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.RUN_DATE IS '실행일';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.RUN_FLAG IS '실행여부';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.REG_USER IS '생성자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.REG_DTTM IS '생성일';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.UPD_USER IS '수정자';
+        COMMENT ON COLUMN LOTTO.MT_JOB_SCHE_DATE_MST.UPD_DTTM IS '수정일';
+
+        ALTER TABLE LOTTO.MT_JOB_SCHE_DATE_MST
+          ADD CONSTRAINT PK_MT_JOB_SCHE_DATE_MST
+          PRIMARY KEY ( SCH_ID, JOB_ID )
           USING INDEX
           TABLESPACE TS_QUADMAX_IDX
-      ;
+        ;
 
-      GRANT SELECT ON LOTTO.MT_JOB_MST TO PUBLIC;
-
+        GRANT SELECT ON LOTTO.MT_JOB_SCHE_DATE_MST TO PUBLIC;
       '''
+  ]
+
+  init_funcs = [
+    '''
+      CREATE OR REPLACE FUNCTION LOTTO.GET_NEXT_ID(
+          I_PREFIX    VARCHAR,
+          I_TABLE     VARCHAR
+      )
+      RETURN VARCHAR
+      IS
+
+          V_SCH_ID        VARCHAR2(50);
+          V_QRY           VARCHAR2(500);
+          V_SCHEMA        VARCHAR2(50) := 'LOTTO';
+          
+          E_PREFIX        EXCEPTION;
+          
+      BEGIN
+
+          IF I_PREFIX IS NULL OR LENGTH(I_PREFIX) != 3 THEN
+              RAISE E_PREFIX;
+          END IF;
+          
+          V_QRY := '
+          SELECT '||CHR(39)||I_PREFIX||CHR(39)||'||TO_CHAR(SYSDATE,'||CHR(39)||'YYYYMMDD'||CHR(39)||')||LPAD(COUNT(1)+1, 5, 0) AS NEXT_SCH_ID
+            FROM '||V_SCHEMA||'.'||I_TABLE
+          ;
+          
+          EXECUTE IMMEDIATE V_QRY INTO V_SCH_ID;
+        
+          RETURN V_SCH_ID;
+
+      EXCEPTION
+          WHEN OTHERS THEN
+              RETURN NULL;
+
+      END GET_NEXT_ID;
+    '''
   ]

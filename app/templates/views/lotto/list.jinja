@@ -48,18 +48,7 @@
         </tbody>
       </table>
     </div>
-    <div class="container">
-      <ul class="pagination">
-        <li class="{{ 'disabled' if not pageInfo.has_prev_page }}"><a href="#!" onclick="movePage('{{ pageInfo.prev_page }}')"><i class="material-icons">chevron_left</i></a></li>
-        {% for page in range( pageInfo.start_page, pageInfo.end_page+1 ) %}
-          <li class="waves-effect{{ ' active' if page == pageInfo.page }}{{ ' disabled' if page > pageInfo.last_page }}">
-            <a href="#!" onclick="movePage('{{ page }}')">{{ page }}</a>
-          </li>
-        {% endfor %}
-        <li class="{{ 'disabled' if not pageInfo.has_next_page }}"><a href="#!" onclick="movePage('{{ pageInfo.next_page }}')"><i class="material-icons">chevron_right</i></a></li>
-      </ul>
-    </div>
+    {% include "/modules/pagination.jinja" %}
   </div>
 </div>
-
 {% endblock section %}

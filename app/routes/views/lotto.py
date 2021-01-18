@@ -4,7 +4,7 @@ from flask import (
   jsonify,
   request
 )
-from app.models.oracle import LottoApiListModel, LottoJobListModel
+from app.models.oracle import LottoApiListModel, JobListModel
 
 bp = Blueprint("lotto", __name__, url_prefix="/lotto")
 
@@ -37,7 +37,7 @@ def view_lotto_list(page=1):
 def view_lotto_write():
   method = request.method
 
-  jobListModel = LottoJobListModel()
+  jobListModel = JobListModel()
 
   if method == "GET":
     crawler_options = jobListModel.getDatas()

@@ -11,16 +11,26 @@ class BaseModel(object):
         @ load: alias로 데이터를 탐색하여 저장.
         @ dump: alias로 dictionary 객체 생성.
   '''
-  def __init__(self, datas:Optional[Iterable]=None, **kwargs):
+  def __init__(self, datas:Union[Iterable, dict]=None, **kwargs):
     self.__seek = 0
     self.__start = 0
     self.__end = 0
     self.__datas = None
 
-    if datas is not None:
+    if isinstance(datas, dict):
+      self.load(datas)
+    elif isinstance(datas, Iterable):
       self.loads(datas)
-    else:
-      self.load(dict(kwargs))
+
+  def get(self, key, default_value=None):
+    for names in self.getAttrs():
+      if key in names:
+        if hasattr(self, names[0]):
+          attr = getattr(self, names[0])
+          if isinstance(attr, BaseField):
+            return attr.getValue() or default_value
+          return attr or default_value
+    return default_value
 
   def getAttrs(self):
     attrs = list()
@@ -35,6 +45,28 @@ class BaseModel(object):
 
   def getAlias(self):
     return [ alias or attr for attr, alias in self.getAttrs() ]
+
+  def setDefaultValues(self):
+    for attrName, alias in self.getAttrs():
+      
+      attr = getattr(self, attrName)
+
+      if isinstance(attr, BaseField) and attr.getValue() is None:
+        dataKey = alias or attrName
+
+        # Default Value
+        default_value = None
+        call_default_value = attr.getOption("default_value", None)
+        
+        if isinstance(call_default_value, str) and hasattr(self, call_default_value):
+          call_default_value = getattr(self, call_default_value)
+
+        if callable(call_default_value):
+          default_value = call_default_value(attrName, attr)
+        else:
+          default_value = call_default_value
+
+        attr.setValue(default_value)
 
   def loads(self, datas:list):
     attrNames = self.getAttrs()
@@ -68,13 +100,6 @@ class BaseModel(object):
 
         # Default Value
         default_value = None
-        call_default_value = attr.getOption("default_value", None)
-        
-        if isinstance(call_default_value, str) and hasattr(self, call_default_value):
-          call_default_value = getattr(self, call_default_value)
-
-        if callable(call_default_value):
-          default_value = call_default_value(attrName, attr)
 
         # Set Value
         if isinstance(attr, ListField):
@@ -94,7 +119,8 @@ class BaseModel(object):
           attrValue = data.get(alias) or data.get(attrName)
 
         # Store value on field.
-        attr.setValue(attrValue or default_value)
+        # attr.setValue(attrValue or default_value)
+        setattr(self, attrName, attrValue)
 
       else:
         '''
@@ -105,7 +131,7 @@ class BaseModel(object):
         attrValue = data.get(dataKey, default_value)
         setattr(self, attrName, attrValue)
 
-    # print( load_data )
+    self.setDefaultValues()
           
     return self
 
@@ -255,7 +281,7 @@ class DatabaseModel(BaseModel):
 
     return table
 
-  def insert(self):
+  def insert(self, pool=None, commit=False):
     '''
       DML
         - 데이터 입력
@@ -270,10 +296,10 @@ class DatabaseModel(BaseModel):
     SQL += ")"
 
     # Execute DML
-    return self.executeUpdate(SQL, values)
+    return self.executeUpdate(SQL, values, pool=pool, commit=commit)
 
 
-  def delete(self):
+  def delete(self, pool=None, commit=False):
     '''
       DML
         - 데이터 삭제
@@ -286,10 +312,10 @@ class DatabaseModel(BaseModel):
       SQL += ( " WHERE " if idx == 0 else " AND "  ) + colName + " = " + symbol
 
     # Execute DML
-    return self.executeUpdate(SQL, values)
+    return self.executeUpdate(SQL, values, pool=pool, commit=commit)
 
 
-  def update(self):
+  def update(self, pool=None, commit=False):
     '''
       DML
         - 데이터 수정
@@ -321,10 +347,10 @@ class DatabaseModel(BaseModel):
       upd_values.append( value )
 
     # Execute DML
-    return self.executeUpdate(SQL, upd_values)
+    return self.executeUpdate(SQL, upd_values, pool=pool, commit=commit)
 
   
-  def merge(self):
+  def merge(self, pool=None, commit=False):
     print("[merge] start")
     updatecount = 0
 
@@ -334,11 +360,11 @@ class DatabaseModel(BaseModel):
 
     if selected is None:
       print("[insert] start")
-      updatecount = self.insert()
+      updatecount = self.insert(pool=pool, commit=commit)
       print("[insert] finish")
     else:
       print("[update] start")
-      updatecount = self.update()
+      updatecount = self.update(pool=pool, commit=commit)
       print("[update] finish")
 
     print("[merge] finish")
@@ -353,10 +379,8 @@ class DatabaseModel(BaseModel):
     '''
     selected = None
 
-    print( SQL )
-
     try:
-      conn = self.Meta.db.ensure(record_to_dict=record_to_dict)
+      conn = self.Meta.db.getConnection(record_to_dict=record_to_dict)
       cursor = conn.cursor()
       cursor.execute(SQL, values)
 
@@ -379,7 +403,7 @@ class DatabaseModel(BaseModel):
     return selected
 
 
-  def executeUpdate(self, SQL, values=None):
+  def executeUpdate(self, SQL, values=None, pool=None, commit=False):
     '''
       DML(Data Manipulation Language)
         - insert, delete, update
@@ -388,25 +412,40 @@ class DatabaseModel(BaseModel):
 
     conn = None
     try:
-      conn = self.Meta.db.getConnection()
+      conn = self.Meta.db.getConnection(pool=pool)
       cursor = conn.cursor()
       cursor.execute(SQL, values)
       cursor.close()
 
       updatecount = cursor.rowcount
 
-      conn.commit()
+      print( self.__class__.__name__, conn.tag )
+
+      print(pool, "commited1")
+      if pool is not None and commit:
+        print(pool, "commited2")
+        conn.commit()
+      elif pool is None:
+        print(pool, "commited3")
+        conn.commit()
 
     except Exception as e:
       traceback.print_exc()
       conn.rollback()
+      self.Meta.db.close()
 
     finally:
-      self.Meta.db.close()
+      print(pool, "closed1")
+      if pool is not None and commit:
+        print(pool, "closed2")
+        self.Meta.db.close()
+      elif pool is None:
+        print(pool, "closed3")
+        self.Meta.db.close()
       
     return updatecount
     
-  def executeMany(self, SQL, values=None):
+  def executeMany(self, SQL, values=None, pool=None, commit=False):
     '''
       DML(Data Manipulation Language) Bulk
         - insert, delete, update
@@ -422,7 +461,38 @@ class DatabaseModel(BaseModel):
 
       updatecount = cursor.rowcount
 
+      if bool(pool) and commit:
+        conn.commit()
+      else:
+        conn.commit()
+
+    except Exception as e:
+      traceback.print_exc()
+      conn.rollback()
+
+    finally:
+      if bool(pool) and commit:
+        self.Meta.db.close()
+      else:
+        self.Meta.db.close()
+      
+    return updatecount
+
+  def executeFunc(self, name, rettype, args, pool=None):
+    '''
+      Call Stored Functions
+    '''
+    retval = None
+    conn = None
+
+    try:
+      conn = self.Meta.db.getConnection(pool=pool)
+      cursor = conn.cursor()
+      retval = cursor.callfunc(name, rettype, args)
+      cursor.close()
       conn.commit()
+
+      print( retval )
 
     except Exception as e:
       traceback.print_exc()
@@ -431,8 +501,7 @@ class DatabaseModel(BaseModel):
     finally:
       self.Meta.db.close()
       
-    return updatecount
-
+    return retval
   
   def getData(self):
     '''
@@ -467,9 +536,6 @@ class DatabaseModel(BaseModel):
     '''
     colNames, symbols, values, PKs = self.getPstmt(fillter__ignore=False)
 
-    # values = list()
-    # symbols = [ ":"+str(idx) for idx in range(1, len(colNames)+1) ]
-
     if hasattr(self, "__datas"):
       values = getattr(self, "__datas")
 
@@ -481,8 +547,6 @@ class DatabaseModel(BaseModel):
     SQL += ")"
 
     print( SQL )
-    print( symbols )
-    print( values )
 
     # Execute DML
     return self.executeMany(SQL, values)
@@ -613,8 +677,8 @@ class DatabaseModel(BaseModel):
     count_per_page = kwargs.get("count_per_page") or self.Meta.page_info.get("count_per_page", 10)
     
     total_count = kwargs.get("total_count") or self.Meta.page_info.get("total_count") or 0
-    first_page = self.Meta.page_info.get("first_page")
-    last_page = int(total_count / rows_per_page) + ( 1 if total_count % rows_per_page > 0 else 0 )
+    first_page = self.Meta.page_info.get("first_page") or 1
+    last_page = int(total_count / rows_per_page) + ( 1 if total_count % rows_per_page > 0 else first_page )
 
     start_page = int( page / count_per_page ) if int( page / count_per_page ) > 0 else first_page
     end_page = start_page + count_per_page - 1
